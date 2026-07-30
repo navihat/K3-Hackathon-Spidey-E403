@@ -36,8 +36,8 @@ Loại: [ ] Tối ưu tính năng có sẵn  [X] Tính năng mới
 | **D. Tìm link VLearn/Phoenix/codelabs** | 16/31 (52%) | ~1-2 lần/tuần | 1-15 phút | Có | Loại |
 
 ### Ứng viên ĐÃ LOẠI + vì sao
-- **B (Check deadline)**: Tần suất thấp hơn (~1/tuần so với 1-2/tuần) và evidence yếu hơn (58% vs 84%). Deadline thường được pin/announce, dễ tìm hơn slide.
-- **C (Xem lại câu trả lời TA)**: Tần suất thấp (~1-2/tháng). Khó xác định nguồn sự thật vì câu trả lời TA không có cấu trúc chuẩn.
+- **B (Check deadline)**: Tần suất thấp hơn (~1/tuần so với 1-2/tuần) và evidence yếu hơn (58% vs 84%). Deadline thường xuất hiện trong tin nhắn thông báo/slide/hình ảnh nên thông tin cần index vượt ngoài phạm vi hackathon 1.5 ngày.
+- **C (Xem lại câu trả lời TA)**: Tần suất thấp (~1-2/tháng). Khó xác định nguồn sự thật vì câu trả lời Lab Coach không có cấu trúc chuẩn.
 - **D (Tìm link VLearn)**: 52% gặp, thường đi cùng với nhu cầu tìm slide (combo). Có thể gom vào ứng viên A sau này.
 
 ### Ứng viên CHỌN + vì sao (bằng số)
