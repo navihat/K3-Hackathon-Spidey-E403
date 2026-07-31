@@ -1,11 +1,30 @@
 # Golden set — Trợ lý tìm link tài liệu Discord
 
-- **Nguồn**: Phát triển từ khảo sát 36 học viên (31 có pain) + quan sát Discord khoá
-- **Tổng số**: 22 case
-  - 10 case thường
-  - 8 case khó (2 case/lớp ①②③④)
-  - 4 case hiếm
-- **≥10 case từ chatlog thật**: Case #1-#10, #18-#19 là các câu hỏi phổ biến được ghi nhận trong survey
+- **Tổng số**: 22 case — 10 thường · 8 khó (2 case/lớp ①②③④) · 4 hiếm
+- **Bản máy đọc**: [`golden-set.yaml`](golden-set.yaml) — `codebase/scripts/chay_eval.py` chạy trực tiếp file này
+- **Kết quả các lượt chạy**: [`ket-qua/`](ket-qua/)
+
+### Case bắt nguồn từ đâu
+
+Hướng B (Trợ lý Học viên) **không có data pack chatlog** — đề bài yêu cầu nhóm tự mining trong
+Discord khoá. Nên "case từ dữ liệu thật" ở đây là case truy được về khảo sát chuẩn A
+([`../data/khao-sat-log.csv`](../data/khao-sat-log.csv), 36 người) hoặc về nội dung quan sát được
+trong 5 kênh, chứ không phải trích từ chatlog VLearn.
+
+| Case | Truy về đâu trong khảo sát |
+|---|---|
+| TH-01, TH-02, TH-05, TH-07, TH-09 | 26/31 (84%) khai cần **slide/tài liệu buổi học** — nhu cầu đông nhất |
+| TH-04, TH-10 | 16/31 (52%) khai cần **link VLearn/Phoenix/aithucchien/codelabs** |
+| TH-03, TH-06, TH-08 | Nhu cầu tìm lại **link lab/bài build** — quan sát trực tiếp trong kênh `lab-k3`, `tai-nguyen` |
+| TH-12 | 7/31 (23%) khai cần **link/QR checkin** — cố tình để ngoài 5 kênh index để test lớp ① |
+| TH-13, TH-14, TH-20, TH-21, TH-22 | 26/31 (84%) khai **"chỉ nhớ mơ hồ → phải check 2-3 kênh"** + thói quen gõ không dấu, hỏi cụt |
+| TH-11, TH-15, TH-16 | Không từ khảo sát — case bẫy tự dựng để ép 4 lớp chỗ khó lộ ra |
+| TH-17, TH-18, TH-19 | Đặc thù vận hành khoá: lab có hạn nộp, slide bị đăng lại bản mới, học viên nhớ tên người gửi |
+
+Cộng lại: **13/22 case truy về một con số cụ thể trong khảo sát**, thêm **3 case** (TH-03, TH-06, TH-08)
+truy về nội dung quan sát trực tiếp trong kênh → **16/22 case có gốc từ dữ liệu thật**. Sáu case còn lại
+(TH-11, TH-15, TH-16, TH-17, TH-18, TH-19) là case bẫy và case đặc thù domain — chúng tồn tại để **bắt lỗi**,
+không để chứng minh nhu cầu.
 
 ## Cấu trúc
 
@@ -27,7 +46,7 @@ Mỗi case gồm:
 | TH-03 | "link bài lab 2" | Link bài lab 2 trong 🧪lab-k3 + link gốc | thường | Đúng link, Có căn cứ |
 | TH-04 | "link VLearn" | Link VLearn trong 📢thông-báo + link gốc | thường | Đúng link, Có căn cứ |
 | TH-05 | "tài liệu buổi 4" | Link tài liệu buổi 4 trong 📘lý-thuyết-k3 + link gốc | thường | Đúng link, Có căn cứ |
-| TH-06 | "link build buổi 1" | Link build buổi 1 trong 🛠build + link gốc | thường | Đúng link, Có căn cứ |
+| TH-06 | "link build buổi 1" | Link build buổi 1 trong 🛠tài-nguyên + link gốc | thường | Đúng link, Có căn cứ |
 | TH-07 | "link lý thuyết buổi 2" | Link lý thuyết buổi 2 trong 📘lý-thuyết-k3 + link gốc | thường | Đúng link, Có căn cứ |
 | TH-08 | "link lab 1" | Link lab 1 trong 🧪lab-k3 + link gốc | thường | Đúng link, Có căn cứ |
 | TH-09 | "slide hackathon" | Link slide hackathon trong 📢thông-báo-chung + link gốc | thường | Đúng link, Có căn cứ |
@@ -38,7 +57,7 @@ Mỗi case gồm:
 | ID | Input | Expected output | Lớp | Chiều |
 |----|-------|----------------|-----|-------|
 | TH-11 | "link slide buổi 10" | "Mình không tìm thấy link slide buổi 10 trong các kênh. Có thể bạn nhầm buổi hoặc slide chưa được đăng." | ① | An toàn (không bịa) |
-| TH-12 | "link checkin" | "Mình không tìm thấy link này trong phạm vi các kênh mình quản lý (thông báo, build, lý thuyết, lab)." | ① | An toàn (không bịa) |
+| TH-12 | "link checkin" | "Mình không tìm thấy link này trong phạm vi các kênh mình quản lý (thông báo, tài nguyên, lý thuyết, lab)." | ① | An toàn (không bịa) |
 
 ### Case khó — Lớp ② Mơ hồ (2 case)
 
@@ -81,4 +100,4 @@ Mỗi case gồm:
 | Lớp ④ — Đặc thù domain | 2 | ≥2 |
 | Case hiếm | 4 | 2-4 |
 | **Tổng** | **22** | **≥20** |
-| Từ chatlog thật | 12 | ≥10 |
+| Có gốc từ dữ liệu thật (khảo sát 36 người + quan sát kênh) | 16 | ≥10 |

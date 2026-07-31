@@ -1,4 +1,81 @@
-# Mini Hackathon AI — Batch 03
+# Trợ lý tìm lại link tài liệu Discord — Nhóm Spidey · Batch 03
+
+> Một học viên gõ câu hỏi tự nhiên trong Discord ("link slide buổi 5") → AI tìm trong tin nhắn
+> của 5 kênh chỉ định → trả về link tài liệu kèm tên người gửi + link tới tin nhắn gốc;
+> không có căn cứ thì nói **"Mình không tìm thấy"**, tuyệt đối không bịa link.
+
+Hướng **B — Trợ lý Học viên (Discord)** · **Tính năng mới** · Mức prototype: **Working**
+
+## Thành viên & phân công
+
+| Mã HV | Họ tên | Phụ trách | Artifact chính |
+|---|---|---|---|
+| 2A202601801 | Trương Văn Thái | Code prototype + Demo | [`codebase/`](codebase/) · [`eval/ket-qua/`](eval/ket-qua/) |
+| _(điền mã HV)_ | Trương Thảo Nguyên | Spec + evidence | [`spec.md`](spec.md) §1-§2 · [`data/khao-sat-log.md`](data/khao-sat-log.md) |
+| _(điền mã HV)_ | Đinh Quốc Trung | Prompt + golden set | `SYSTEM` trong [`codebase/timlai/tra_cuu.py`](codebase/timlai/tra_cuu.py) · [`eval/golden-set.md`](eval/golden-set.md) |
+
+## Vấn đề & bằng chứng
+
+Khảo sát **36 học viên ngoài nhóm** (log đầy đủ: [`data/khao-sat-log.csv`](data/khao-sat-log.csv)):
+
+| Con số | Ý nghĩa |
+|---|---|
+| **31/36 (86%)** | từng không tìm được thông tin trong Discord 7 ngày qua |
+| **26/31 (84%)** | cần tìm slide/tài liệu buổi học — ứng viên được chọn |
+| **26/31 (84%)** | chỉ nhớ mơ hồ → phải check 2-3 kênh |
+| **15/31 (48%)** | mất 5-15 phút mỗi lần tìm |
+| **24/31 (77%)** | khó chịu; **23%** bỏ cuộc hoặc lỡ deadline |
+
+Bảng impact 4 ứng viên + lý do loại B/C/D: [`spec.md`](spec.md) §2.
+
+## Chạy thử trong 4 lệnh
+
+```powershell
+cd codebase
+python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt
+Copy-Item .env.example .env          # rồi điền GEMINI_API_KEY
+python scripts/seed_gia.py           # nạp 20 tin nhắn giả — không cần server Discord
+python scripts/thu_hoi.py "link slide buổi 5"
+```
+
+Dựng server Discord thật, 9 case test tay, bảng lỗi thường gặp: [`codebase/README.md`](codebase/README.md).
+
+## Bản đồ repo → rubric
+
+| Đường dẫn | Nội dung | Rubric |
+|---|---|---|
+| [`spec.md`](spec.md) | AI Spec — §1-§2 evidence · §4 lát cắt · §5-§6 chỗ khó · §7 quality bar | R1, R2, R3, R4 |
+| [`data/khao-sat-log.csv`](data/khao-sat-log.csv) · [`.md`](data/khao-sat-log.md) | Log khảo sát 36 người, đủ câu hỏi + từng câu trả lời | R1 |
+| [`codebase/`](codebase/) | Prototype: 3 lớp Discord → FTS5 → Gemini, 18 pytest | R5 |
+| [`eval/golden-set.md`](eval/golden-set.md) · [`.yaml`](eval/golden-set.yaml) | 22 case: 10 thường · 8 khó (2/lớp ①②③④) · 4 hiếm | R4 |
+| [`eval/ket-qua/`](eval/ket-qua/) | Bảng kết quả từng lượt, kể cả case chưa đạt | R4 |
+| [`validation/`](validation/) | Feedback log từ vòng user test | R6 |
+| [`reflection/`](reflection/) | Mỗi người 1 file | riêng |
+| [`demo-slides.pdf`](demo-slides.pdf) | Slide 6 trang · nguồn sinh ra nó: [`demo-slides.html`](demo-slides.html) | demo |
+| [`CLAUDE.md`](CLAUDE.md) | Bối cảnh + luật chơi khi phát triển ý tưởng tiếp | — |
+
+Sinh lại PDF sau khi sửa slide:
+
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless --disable-gpu `
+  --print-to-pdf="demo-slides.pdf" --no-pdf-header-footer "demo-slides.html"
+```
+
+## Quality bar & kết quả
+
+**Bar chốt 23:59 ngày 1** ([`spec.md`](spec.md) §7): ≥85% pass golden set **và 0 case bịa nguồn** (lớp ①).
+
+| Lượt | Model | Pass | Bịa nguồn |
+|---|---|---|---|
+| [luot-1](eval/ket-qua/luot-1.md) | ⚠️ LLM giả — kiểm runner, không phải kết quả thật | 72.7% | 19 |
+| [luot-2](eval/ket-qua/luot-2.md) | `gemini-3.1-flash-lite` · 22/22 case | **81.8%** — chưa đạt | **0** — đạt |
+
+Bốn case trượt quy về hai nguyên nhân, phân tích đầy đủ trong [luot-2.md](eval/ket-qua/luot-2.md).
+Mọi lượt đều ghi đủ case, kể cả case chưa đạt.
+
+---
+
+# Thông tin sự kiện — Mini Hackathon AI Batch 03
 
 **SPEC → Prototype → Demo.** Đây không phải cuộc thi code — đây là cuộc thi **tư duy sản phẩm AI**.
 

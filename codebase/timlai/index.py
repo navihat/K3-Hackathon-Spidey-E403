@@ -9,12 +9,30 @@ mạng, và giải thích được trước giám khảo — mỗi kết quả t
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 import sqlite3
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import config
+
+
+_URL = re.compile(r"https?://[^\s<>\"'`]+")
+_RAC_CUOI = ".,;:!?)]}>*_”’"      # dấu câu dính vào đuôi URL khi người ta gõ
+
+
+def boc_url(van_ban: str) -> list[str]:
+    """Bóc mọi URL ra khỏi một đoạn text, bỏ dấu câu dính ở đuôi. KHÔNG trùng lặp.
+
+    Đây là NGUỒN SỰ THẬT DUY NHẤT cho link mà bot trả về: link phải bóc ra từ nội
+    dung tin nhắn có thật trong index, không bao giờ lấy từ chữ mà model viết ra.
+
+    Bỏ trùng là bắt buộc chứ không phải cho đẹp: `tu_discord()` ghép `m.content`
+    với `embed.url`, mà Discord tự sinh embed preview cho chính link trong content
+    -> mỗi URL vào index hai lần, và bot trả ra hai dòng y hệt nhau.
+    """
+    return list(dict.fromkeys(u.rstrip(_RAC_CUOI) for u in _URL.findall(van_ban)))
 
 
 @dataclass
@@ -30,6 +48,17 @@ class TinNhan:
 
     def dong_prompt(self) -> str:
         return f"[{self.id}] #{self.kenh} · {self.tac_gia} · {self.thoi_diem}\n{self.noi_dung}"
+
+    def cac_link(self) -> list[str]:
+        """Link tài liệu thật trong tin này (không tính jump_url của chính tin nhắn)."""
+        return boc_url(self.noi_dung)
+
+    def ngay_ngan(self) -> str:
+        """dd/mm để hiện cho người đọc. Hỏng định dạng thì trả chuỗi rỗng, đừng ném."""
+        try:
+            return dt.datetime.fromisoformat(self.thoi_diem).strftime("%d/%m")
+        except ValueError:
+            return ""
 
 
 SCHEMA = """
@@ -77,6 +106,25 @@ def dem(db: sqlite3.Connection) -> int:
 
 
 _TU = re.compile(r"[0-9A-Za-zÀ-ỹ]+")
+_CHU_SO = re.compile(r"^(.*[A-Za-zÀ-ỹ])(\d+)$")     # "cp5" -> ("cp", "5")
+
+# Người viết tin và người đi hỏi dùng hai lối viết khác nhau cho cùng một thứ:
+# thông báo ghi "CP5", học viên gõ "checkpoint 5". unicode61 tách "CP5" thành MỘT
+# token nên hai bên không bao giờ gặp nhau. Bảng này bắc cầu, chỉ cho vài từ thật
+# sự hay gặp trong khoá — không phải từ điển đồng nghĩa tổng quát.
+_VIET_TAT = {"checkpoint": "cp", "buoi": "b", "buổi": "b", "workshop": "ws"}
+
+
+def _mo_rong(tu: list[str]) -> list[str]:
+    """Sinh thêm biến thể cho từ khoá: tách 'cp5' và ghép 'checkpoint 5' -> 'cp5'."""
+    them: list[str] = []
+    for i, t in enumerate(tu):
+        if m := _CHU_SO.fullmatch(t):
+            them += [m.group(1), m.group(2)]        # "cp5"  -> "cp", "5"
+        sau = tu[i + 1] if i + 1 < len(tu) else ""
+        if sau.isdigit() and (viet_tat := _VIET_TAT.get(t.lower())):
+            them.append(viet_tat + sau)             # "checkpoint 5" -> "cp5"
+    return them
 
 
 def _cau_truy_van(cau_hoi: str) -> str:
@@ -87,7 +135,8 @@ def _cau_truy_van(cau_hoi: str) -> str:
     Cách xử lý: bóc từ, bọc mỗi từ trong ngoặc kép, nối bằng OR.
     """
     tu = _TU.findall(cau_hoi)
-    return " OR ".join(f'"{t}"' for t in tu)
+    tat_ca = dict.fromkeys(tu + _mo_rong(tu))       # giữ thứ tự, bỏ trùng
+    return " OR ".join(f'"{t}"' for t in tat_ca)
 
 
 def truy_xuat(

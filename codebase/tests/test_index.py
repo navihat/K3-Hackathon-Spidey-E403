@@ -43,6 +43,33 @@ def test_khop_ten_file_dinh_kem(db):
     assert any(t.id == "1001" for t in kq)
 
 
+def test_bat_cau_viet_tat_checkpoint_sang_cp(db):
+    """Thông báo ghi "CP5", học viên gõ "checkpoint 5".
+
+    unicode61 tách "CP5" thành MỘT token nên nó không khớp cả "checkpoint" lẫn "5"
+    — tin nhắn chứa link nộp CP5 không hề lọt vào danh sách ứng viên, và lớp ③
+    trả "không tìm thấy" dù link nằm sờ sờ trong index. Đo thật 31/07.
+    """
+    tin = index.TinNhan(
+        id="3001", kenh="ly-thuyet-k3", tac_gia="Văn Thái", thoi_diem="2026-07-30T09:00",
+        url="https://discord.com/channels/1/2/3001",
+        noi_dung="CP5: Mốc cuối trước khi Demo: https://forms.gle/xoroSTFV9WtPG1CfA",
+    )
+    index.them_nhieu(db, [tin])
+    assert any(t.id == "3001" for t in index.truy_xuat(db, "link nộp checkpoint 5"))
+    assert any(t.id == "3001" for t in index.truy_xuat(db, "link CP5"))
+
+
+def test_tach_chu_so_dinh_lien(db):
+    # "cp5" phải sinh thêm "cp" và "5" để bắt được tin viết rời.
+    assert index._cau_truy_van("cp5") == '"cp5" OR "cp" OR "5"'
+
+
+def test_mo_rong_khong_lam_hong_cau_thuong(db):
+    # Câu không có viết tắt thì giữ nguyên, không sinh rác.
+    assert index._cau_truy_van("link slide") == '"link" OR "slide"'
+
+
 def test_uu_tien_moi_hon_khi_diem_bang_nhau(db):
     """④ Đặc thù domain: tin cũ đã bị thay nguy hiểm hơn không trả lời."""
     kq = index.truy_xuat(db, "slide buổi")

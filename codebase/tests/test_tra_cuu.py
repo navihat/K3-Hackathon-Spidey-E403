@@ -28,9 +28,14 @@ def _gia(kq: KetQua):
 # ─────────────────────────────────────────────────────────────
 
 def test_lop1_bo_id_bia_dat(tin_mau):
-    """LLM trả 1 id thật + 1 id bịa -> chỉ giữ id thật, đếm id bịa."""
+    """LLM trả 1 id thật + 1 id bịa -> chỉ giữ id thật, đếm id bịa.
+
+    Câu hỏi nói rõ "lý thuyết" để `lam_ro_loai()` không xen vào: câu chung chung
+    ("slide buổi 5") giờ bị ép hỏi lại loại tài liệu, và test này đang kiểm neo()
+    chứ không kiểm đường hỏi lại (xem test_thoi_gian_va_loai.py).
+    """
     kq, bo_di = tra_cuu.tra_cuu(
-        "link slide buổi 5", tin_mau,
+        "link slide lý thuyết buổi 5", tin_mau,
         goi_llm=_gia(_kq(message_ids=["1001", "id_khong_ton_tai"])),
     )
     assert kq.message_ids == ["1001"]

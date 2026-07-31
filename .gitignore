@@ -1,3 +1,22 @@
 .DS_Store
 node_modules/
+
+# Secret — KHÔNG BAO GIỜ commit
+.env
 *.env
+!.env.example
+
+# Python
+*.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Index chứa tin nhắn Discord thật — ràng buộc 3 của đề bài cấm commit data thật
+index.db
+index.db-*
+
+# eval/ket-qua/ THÌ PHẢI COMMIT — rubric R4 chấm trên bảng kết quả trong repo.
+# Trừ cache chạy tiếp của chay_eval.py: nó là bản nháp giữa chừng, không phải kết quả.
+eval/ket-qua/.cache-eval.json

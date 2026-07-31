@@ -1,6 +1,7 @@
 """Sinh index bằng DATA GIẢ — chạy được toàn bộ pipeline mà chưa cần server Discord.
 
-    python scripts/seed_gia.py
+    python scripts/seed_gia.py                # nạp thẳng vào index.db
+    python scripts/seed_gia.py --in-discord   # in ra để DÁN TAY vào server test
 
 Đề bài ràng buộc 3 cho phép rõ: "Chỉ dùng data trong data/ hoặc **data giả tự
 sinh**". Dùng data giả cũng tránh sạch rủi ro commit tin nhắn thật vào repo.
@@ -53,10 +54,10 @@ TIN = [
     ("lab-k3", "LabCoach Hà", 12, "Bài lab 2 — dựng RAG mini: https://codelabs.aithucchien.vn/lab2 (deadline 23:59 sau 3 ngày)"),
     ("lab-k3", "LabCoach Hà", 5, "Bài lab 3 — agent có tool: https://codelabs.aithucchien.vn/lab3"),
 
-    ("build", "LabCoach Minh", 20, "Build buổi 1 — repo mẫu: https://github.com/aithucchien/build-b1"),
-    ("build", "LabCoach Minh", 13, "Build buổi 2 — template FastAPI: https://github.com/aithucchien/build-b2"),
-    ("build", "LabCoach Hà", 9, "Hướng dẫn setup môi trường: https://github.com/aithucchien/setup-guide"),
-    ("build", "LabCoach Minh", 7, "Slide buổi 5 mình có mirror ở đây nữa: https://github.com/aithucchien/slide-b5"),
+    ("tai-nguyen", "LabCoach Minh", 20, "Build buổi 1 — repo mẫu: https://github.com/aithucchien/build-b1"),
+    ("tai-nguyen", "LabCoach Minh", 13, "Build buổi 2 — template FastAPI: https://github.com/aithucchien/build-b2"),
+    ("tai-nguyen", "LabCoach Hà", 9, "Hướng dẫn setup môi trường: https://github.com/aithucchien/setup-guide"),
+    ("tai-nguyen", "LabCoach Minh", 7, "Slide buổi 5 mình có mirror ở đây nữa: https://github.com/aithucchien/slide-b5"),
 ]
 
 DINH_KEM = {
@@ -67,7 +68,37 @@ DINH_KEM = {
 }
 
 
+def in_de_dan() -> None:
+    """In 20 tin nhắn theo từng kênh để dán tay vào server Discord test.
+
+    Dán TAY bằng tài khoản người, không dùng webhook/bot: backfill.py bỏ qua
+    `m.author.bot`, dán bằng bot thì index sẽ rỗng.
+
+    Dán ĐÚNG THỨ TỰ trong mỗi kênh — TH-18 đòi bot chọn bản slide buổi 5 mới nhất,
+    mà "mới nhất" tính theo thời điểm đăng.
+    """
+    theo_kenh: dict[str, list[tuple[int, str]]] = {}
+    for kenh, _tac_gia, truoc, noi_dung in TIN:
+        theo_kenh.setdefault(kenh, []).append((truoc, noi_dung))
+
+    for kenh, dsach in theo_kenh.items():
+        print(f"\n{'='*70}\n#{kenh}   ({len(dsach)} tin — dán lần lượt từ trên xuống)\n{'='*70}")
+        for truoc, noi_dung in dsach:
+            print(f"\n{noi_dung}")
+            print(f"    ^ bản gốc lùi {truoc} ngày — Discord sẽ đóng dấu HÔM NAY")
+
+    print(f"\n{'='*70}")
+    print("LƯU Ý: dán vào Discord thì mọi tin đều mang thời điểm hôm nay, nên")
+    print("canh_bao_cu() không kích hoạt và case ④ (TH-17) sẽ không tái hiện được.")
+    print("Vì vậy: lượt eval R4 chạy trên seed_gia (có lùi ngày), Discord thật để")
+    print("demo end-to-end. Cả hai đều là data giả — đúng ràng buộc 3 của đề bài.")
+
+
 def main() -> None:
+    if "--in-discord" in sys.argv:
+        in_de_dan()
+        return
+
     db = index.mo_db()
     db.execute("DELETE FROM tin_nhan")
 

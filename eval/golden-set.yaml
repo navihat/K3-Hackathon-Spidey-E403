@@ -1,0 +1,147 @@
+# Bản MÁY ĐỌC ĐƯỢC của golden-set.md — dùng cho codebase/scripts/chay_eval.py
+#
+# Chỉ khai những gì kiểm được TỰ ĐỘNG. Link đúng/sai vẫn phải người chấm tay
+# (cột `ghi_chu`), vì message_id phụ thuộc server test của từng người.
+#
+# mong_doi:
+#   tim_thay       bool  — bot có trả về nguồn hay không
+#   ngoai_pham_vi  bool  — ③ bot từ chối vì ngoài thẩm quyền
+#   can_lam_ro     bool  — ② bot hỏi lại thay vì đoán
+#   do_tin_cay     str   — "cao" | "thap" (bỏ trống = không kiểm)
+
+- id: TH-01
+  input: "link slide buổi 5"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false, do_tin_cay: cao}
+  ghi_chu: "Link slide buổi 5 trong ly-thuyet-k3 + link gốc + tên người gửi"
+
+- id: TH-02
+  input: "slide buổi 3"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link slide buổi 3 trong ly-thuyet-k3"
+
+- id: TH-03
+  input: "link bài lab 2"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link lab 2 trong lab-k3"
+
+- id: TH-04
+  input: "link VLearn"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link VLearn trong thong-bao"
+
+- id: TH-05
+  input: "tài liệu buổi 4"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link tài liệu buổi 4 trong ly-thuyet-k3"
+
+- id: TH-06
+  input: "link build buổi 1"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link build buổi 1 trong tai-nguyen"
+
+- id: TH-07
+  input: "link lý thuyết buổi 2"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link lý thuyết buổi 2 trong ly-thuyet-k3"
+
+- id: TH-08
+  input: "link lab 1"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link lab 1 trong lab-k3"
+
+- id: TH-09
+  input: "slide hackathon"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link slide hackathon trong thong-bao-chung"
+
+- id: TH-10
+  input: "link aithucchien"
+  lop: thuong
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Link aithucchien trong thong-bao"
+
+# ① Không căn cứ — quality bar đòi 0 case bịa nguồn ở lớp này
+- id: TH-11
+  input: "link slide buổi 10"
+  lop: "1"
+  mong_doi: {tim_thay: false, ngoai_pham_vi: false}
+  ghi_chu: "Chưa có buổi 10 → phải nói không tìm thấy, KHÔNG được tạo link"
+
+- id: TH-12
+  input: "link checkin"
+  lop: "1"
+  mong_doi: {tim_thay: false, ngoai_pham_vi: false}
+  ghi_chu: "QR checkin không nằm trong 5 kênh index → nói rõ ngoài phạm vi kênh"
+
+# ② Mơ hồ
+- id: TH-13
+  input: "link slide"
+  lop: "2"
+  mong_doi: {can_lam_ro: true, do_tin_cay: thap}
+  ghi_chu: "Không rõ buổi mấy → hỏi lại, liệt kê lựa chọn tìm được"
+
+- id: TH-14
+  input: "slie buoi 5"
+  lop: "2"
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Sai chính tả + không dấu → vẫn phải khớp 'slide buổi 5' (FTS5 remove_diacritics)"
+
+# ③ Ngoài phạm vi
+- id: TH-15
+  input: "giải thích hàm softmax"
+  lop: "3"
+  mong_doi: {tim_thay: false, ngoai_pham_vi: true}
+  ghi_chu: "Câu hỏi kiến thức → từ chối + chỉ sang kênh hỏi-đáp / AI Tutor"
+
+- id: TH-16
+  input: "bài tập buổi 3 làm thế nào"
+  lop: "3"
+  mong_doi: {tim_thay: false, ngoai_pham_vi: true}
+  ghi_chu: "Đòi hướng dẫn làm bài → từ chối, chỉ sang Lab Coach"
+
+# ④ Đặc thù domain
+- id: TH-17
+  input: "link lab 2"
+  lop: "4"
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Lab đã hết hạn → trả link KÈM cảnh báo thời điểm (canh_bao_cu)"
+
+- id: TH-18
+  input: "link slide buổi 5 bản mới nhất"
+  lop: "4"
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Có 2 phiên bản → phải trả bản MỚI NHẤT theo thoi_diem và nói rõ"
+
+# Case hiếm
+- id: TH-19
+  input: "link slide của anh Tuấn"
+  lop: hiem
+  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
+  ghi_chu: "Lọc theo tên người gửi"
+
+- id: TH-20
+  input: "cho em xin lại link slide với ạ"
+  lop: hiem
+  mong_doi: {ngoai_pham_vi: false}
+  ghi_chu: "Câu dài lịch sự → vẫn hiểu ý; mơ hồ buổi nào thì được phép hỏi lại"
+
+- id: TH-21
+  input: "link buổi hôm qua"
+  lop: hiem
+  mong_doi: {can_lam_ro: true, do_tin_cay: thap}
+  ghi_chu: "Thời gian tương đối → hỏi lại, không tự đoán ngày"
+
+- id: TH-22
+  input: "link"
+  lop: hiem
+  mong_doi: {tim_thay: false, can_lam_ro: true}
+  ghi_chu: "Quá ngắn → hỏi lại kèm ví dụ câu hỏi tốt"
