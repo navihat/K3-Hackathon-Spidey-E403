@@ -38,6 +38,16 @@ BAR_BIA = 0         # spec.md §7: 0 case bịa nguồn
 # Cache nằm cạnh bảng kết quả nhưng KHÔNG phải artifact nộp bài — .gitignore chặn.
 CACHE = config.KET_QUA_DIR / ".cache-eval.json"
 
+# Tăng số này mỗi khi sửa luật HẬU XỬ LÝ trong tra_cuu (neo, lam_ro_loai, moc_thoi_gian…).
+# Cache lưu KetQua sau xử lý, nên đổi luật mà giữ cache là đo lại luật CŨ rồi chấm bằng
+# mong đợi MỚI — sai theo kiểu không ai nhìn ra. Đổi số là mọi dòng cache cũ tự bị bỏ qua.
+HANH_VI = 2      # 2 = 31/07, thêm quy đổi thời gian + hỏi rõ loại tài liệu + VLearn
+
+
+def _khoa(c: dict) -> str:
+    """Khoá cache gồm cả input: sửa câu hỏi của một case thì kết quả cũ phải hết hạn."""
+    return f"v{HANH_VI}|{c['id']}|{c['input']}"
+
 
 def _doc_cache() -> dict:
     if not CACHE.exists():
@@ -108,7 +118,7 @@ def main() -> None:
 
     for i, c in enumerate(cases):
         ung_vien = index.truy_xuat(db, c["input"])
-        cu = cache.get(c["id"])
+        cu = cache.get(_khoa(c))
         if cu:
             kq, bo_di, model_case, dau = (
                 tra_cuu.KetQua(**cu["kq"]), cu["bo_di"], cu["model"], "·"
@@ -126,7 +136,7 @@ def main() -> None:
                 break
             model_case, dau = ("LLM giả" if dung_gia else config.MODEL), " "
             if not dung_gia:
-                cache[c["id"]] = {
+                cache[_khoa(c)] = {
                     "model": model_case, "kq": kq.model_dump(), "bo_di": bo_di
                 }
                 _ghi_cache(cache)          # ghi ngay, đừng đợi hết vòng lặp

@@ -5,12 +5,10 @@
 Chỉ làm 3 việc: nhận câu hỏi, gọi lớp ② rồi lớp ③, render kết quả.
 Mọi logic quyết định nằm ở tra_cuu.py — nhờ vậy test được ngoài Discord.
 
-BA ĐƯỜNG VÀO, cùng một hàm xử lý (`hoi`):
-  1. `/timlai <câu hỏi>`      — slash command
-  2. @mention bot             — gõ tự nhiên trong kênh, không cần nhớ lệnh
-  3. reply vào tin của bot    — đường "correction" ở spec §6, hỏi lại không cần gõ lệnh
+HAI ĐƯỜNG VÀO, cùng một hàm xử lý (`hoi`):
+  1. @mention bot             — gõ tự nhiên trong kênh, không cần nhớ lệnh
+  2. reply vào tin của bot    — đường "correction" ở spec §6, hỏi lại không cần gõ lệnh
 Thêm chế độ opt-in: mọi tin trong kênh thuộc KENH_TU_DONG đều được coi là câu hỏi.
-Thêm `/gioithieu` — bot tự giới thiệu; cùng nội dung với khi bị hỏi "bạn làm được gì".
 
 Câu trả lời hiện **công khai** (ai trong kênh cũng thấy), không còn ephemeral.
 """
@@ -21,7 +19,6 @@ import asyncio
 import re
 
 import discord
-from discord import app_commands
 
 from . import config, index, render, tra_cuu
 
@@ -32,18 +29,7 @@ intents.message_content = True   # ★ phải bật CẢ ở đây VÀ ở Devel
 class Bot(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=intents)
-        self.tree = app_commands.CommandTree(self)
         self.db = index.mo_db()
-
-    async def setup_hook(self) -> None:
-        if config.GUILD_ID:
-            # Sync vào 1 guild -> command hiện ra ngay, khỏi chờ Discord cache
-            # toàn cục (có thể tới 1 tiếng). Rất đáng khi đang demo.
-            guild = discord.Object(id=int(config.GUILD_ID))
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
-        else:
-            await self.tree.sync()
 
     async def on_ready(self) -> None:
         print(f"online: {self.user} · index có {index.dem(self.db)} tin nhắn")
@@ -162,29 +148,6 @@ def tu_discord(m: discord.Message) -> index.TinNhan:
         url=m.jump_url,
         noi_dung=" ".join([m.content, *filter(None, them)]).strip(),
     )
-
-
-@bot.tree.command(name="timlai", description="Tìm lại link/tài liệu đã đăng trong Discord")
-@app_commands.describe(cau_hoi="VD: link slide buổi 5")
-async def timlai(itx: discord.Interaction, cau_hoi: str) -> None:
-    # ephemeral=False -> cả kênh cùng thấy. Một người hỏi, cả lớp đỡ phải hỏi lại.
-    # Đánh đổi: bot trả sai thì cũng sai công khai — nên hàng rào chống bịa ở
-    # neo() càng quan trọng, và footer "đã bỏ N kết luận" cũng hiện cho mọi người.
-    await itx.response.defer(ephemeral=False)   # ★ AI call > 3s, không defer là fail
-    embed = await hoi(bot.db, cau_hoi)
-    await itx.followup.send(embed=embed, ephemeral=False, allowed_mentions=KHONG_PING)
-
-
-@bot.tree.command(name="gioithieu", description="Spidey là ai, làm được gì, và hỏi thế nào")
-async def gioithieu(itx: discord.Interaction) -> None:
-    """Cửa vào cho người CHƯA biết hỏi gì — thứ mà `/timlai` không giúp được.
-
-    Không defer: câu trả lời là hằng số, không gọi AI, không đụng index nào ngoài
-    một lần đếm. Trả lời công khai để cả kênh cùng biết bot làm được gì.
-    """
-    kq = tra_cuu.ket_qua_gioi_thieu()
-    embed = render.thanh_embed(kq, [], [], so_tin=index.dem(bot.db))
-    await itx.response.send_message(embed=embed, ephemeral=False, allowed_mentions=KHONG_PING)
 
 
 if __name__ == "__main__":

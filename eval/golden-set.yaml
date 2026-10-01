@@ -8,12 +8,26 @@
 #   ngoai_pham_vi  bool  — ③ bot từ chối vì ngoài thẩm quyền
 #   can_lam_ro     bool  — ② bot hỏi lại thay vì đoán
 #   do_tin_cay     str   — "cao" | "thap" (bỏ trống = không kiểm)
+#   gioi_thieu     bool  — bot trả lời về CHÍNH NÓ thay vì đi tìm tài liệu
+#
+# VẪN GIỮ ĐÚNG 22 CASE. Ba đường đi thêm ngày 31/07 (giới thiệu bot · quy đổi thời
+# gian · hỏi rõ loại tài liệu) đều do CODE quyết định, chạy giống hệt nhau mọi lần —
+# nhét chúng vào đây thành case mới thì tỉ lệ pass tăng mà chẳng đo thêm được gì về
+# chất lượng của AI, tức là làm đẹp số liệu. Chúng được test ở
+# codebase/tests/test_gioi_thieu.py và test_thoi_gian_va_loai.py (115 test, 0 token).
+# Thứ 22 case này đo là QUYẾT ĐỊNH CỦA MODEL, nên bộ case giữ nguyên độ khó và
+# tỉ lệ pass vẫn so sánh được với các lượt trước.
 
+# TH-01 nằm ở đây từ đầu nhưng từ 31/07 nó là case lớp ② (xem ghi_chu) — giữ nguyên
+# vị trí và id để đối chiếu được với các lượt đo cũ trong eval/ket-qua/.
 - id: TH-01
   input: "link slide buổi 5"
-  lop: thuong
-  mong_doi: {tim_thay: true, ngoai_pham_vi: false, do_tin_cay: cao}
-  ghi_chu: "Link slide buổi 5 trong ly-thuyet-k3 + link gốc + tên người gửi"
+  lop: "2"
+  mong_doi: {can_lam_ro: true, do_tin_cay: thap, ngoai_pham_vi: false}
+  ghi_chu: >-
+    ĐỔI 31/07: buổi 5 có slide lý thuyết (ly-thuyet-k3) VÀ bản mirror ở tai-nguyen —
+    "slide buổi 5" không nói rõ loại nào. Phải hỏi lại "loại nào?" kèm mỗi loại một
+    tin mới nhất, không được tự chọn một cái rồi khai do_tin_cay=cao
 
 - id: TH-02
   input: "slide buổi 3"
@@ -92,8 +106,11 @@
 - id: TH-14
   input: "slie buoi 5"
   lop: "2"
-  mong_doi: {tim_thay: true, ngoai_pham_vi: false}
-  ghi_chu: "Sai chính tả + không dấu → vẫn phải khớp 'slide buổi 5' (FTS5 remove_diacritics)"
+  mong_doi: {can_lam_ro: true, do_tin_cay: thap}
+  ghi_chu: >-
+    ĐỔI 31/07: sai chính tả + không dấu vẫn phải khớp 'slide buổi 5'
+    (FTS5 remove_diacritics) — kiểm bằng cột "Ứng viên" phải > 0. Nhưng buổi 5 có hai
+    loại tài liệu nên kết quả đúng giờ là hỏi lại loại nào, không phải trả thẳng link
 
 # ③ Ngoài phạm vi
 - id: TH-15
@@ -116,10 +133,13 @@
   ghi_chu: "Lab đã hết hạn → trả link KÈM cảnh báo thời điểm (canh_bao_cu)"
 
 - id: TH-18
-  input: "link slide buổi 5 bản mới nhất"
+  input: "link slide lý thuyết buổi 5 bản mới nhất"
   lop: "4"
   mong_doi: {tim_thay: true, ngoai_pham_vi: false}
-  ghi_chu: "Có 2 phiên bản → phải trả bản MỚI NHẤT theo thoi_diem và nói rõ"
+  ghi_chu: >-
+    ĐỔI 31/07: input thêm chữ "lý thuyết". Case này đo việc chọn bản MỚI NHẤT theo
+    thoi_diem (2 phiên bản slide buổi 5); không nói rõ loại thì bot sẽ đi hỏi lại
+    loại nào và không còn đo được ④ nữa. Phải kèm dòng chỉ sang VLearn
 
 # Case hiếm
 - id: TH-19
@@ -131,14 +151,20 @@
 - id: TH-20
   input: "cho em xin lại link slide với ạ"
   lop: hiem
-  mong_doi: {ngoai_pham_vi: false}
-  ghi_chu: "Câu dài lịch sự → vẫn hiểu ý; mơ hồ buổi nào thì được phép hỏi lại"
+  mong_doi: {ngoai_pham_vi: false, can_lam_ro: true}
+  ghi_chu: >-
+    Câu dài lịch sự → vẫn hiểu ý; không rõ buổi mấy lẫn loại gì nên phải hỏi lại
+    (từ 31/07 đây là hành vi bắt buộc, không còn là "được phép")
 
 - id: TH-21
   input: "link buổi hôm qua"
   lop: hiem
-  mong_doi: {can_lam_ro: true, do_tin_cay: thap}
-  ghi_chu: "Thời gian tương đối → hỏi lại, không tự đoán ngày"
+  mong_doi: {tim_thay: false, can_lam_ro: false, do_tin_cay: thap}
+  ghi_chu: >-
+    ĐỔI 31/07: thời gian tương đối giờ do CODE quy đổi ("hôm qua" → ngày cụ thể) rồi
+    lọc ứng viên theo đúng ngày đó, không hỏi lại nữa. Data giả không có tin nào của
+    hôm qua → phải nói không thấy KÈM ngày đã hiểu (dòng 🗓). Nếu index có tin của hôm
+    qua thì case này phải sửa lại mong đợi
 
 - id: TH-22
   input: "link"

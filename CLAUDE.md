@@ -57,11 +57,16 @@ Spec, code, eval và README **phải khớp nhau** — rubric chấm chéo giữ
 | Đổi model hoặc tham số LLM | [`codebase/timlai/config.py`](codebase/timlai/config.py) (kèm số đo tay) · `spec.md` §9 changelog · đo lại mốc **< 5 giây** ở §7 |
 | Thêm nguyên tắc HAX/PAIR | `spec.md` §4b — mỗi nguyên tắc **phải trỏ được vào một dòng code thật**, nếu không thì không tính điểm |
 | Đổi cách chống bịa | `neo()` trong `tra_cuu.py` (**không** sửa bằng prompt) · `test_tra_cuu.py` · chạy lại `chay_eval.py --gia` |
+| Đổi luật hậu xử lý (`neo` · `lam_ro_loai` · `moc_thoi_gian`) | tăng `HANH_VI` trong [`chay_eval.py`](codebase/scripts/chay_eval.py) — cache lưu `KetQua` **sau** xử lý, giữ cache cũ là đo luật cũ rồi chấm bằng mong đợi mới |
+| Đổi bảng loại tài liệu / link cố định | `LOAI_TAI_LIEU` trong `tra_cuu.py` · `config.LINK_VLEARN` · `test_thoi_gian_va_loai.py` · `spec.md` §6 |
+| Đổi nội dung bot tự giới thiệu | `tra_cuu.GIOI_THIEU` (**tuyệt đối không chứa URL** — nó không đi qua `neo()`) · `spec.md` §4b hàng G2 · `test_gioi_thieu.py` |
 
 ## 5. Ranh giới — cái gì trong làn, cái gì ngoài
 
 **Trong làn** (đã có evidence, chỉ là chưa build): gom tìm link VLearn/Phoenix/codelabs vào cùng luồng
-(ứng viên D, 52%) · lọc theo người gửi · xử lý thời gian tương đối ("hôm qua", TH-21).
+(ứng viên D, 52%) · lọc theo người gửi.
+**Đã build 31/07**: thời gian tương đối ("hôm qua" → ngày cụ thể, `moc_thoi_gian`) · chỉ đường sang VLearn
+cho slide lý thuyết (`config.LINK_VLEARN`).
 
 **Đã cân nhắc và loại** (spec §2) — đừng đề xuất lại trừ khi có số mới:
 - **B · Check deadline** — 58%, tần suất ~1 lần/tuần, deadline thường được pin nên dễ tìm hơn slide.
@@ -72,9 +77,13 @@ Spec, code, eval và README **phải khớp nhau** — rubric chấm chéo giữ
 
 ## 6. Trạng thái hiện tại & khoảng trống đang mở
 
-Đã có: 3 lớp code chạy end-to-end · 18 pytest · golden set 22 case · bot `/timlai` chạy trong server test ·
-**lượt đo thật 22/22 case: 81.8% pass, 0 case bịa nguồn** ([`eval/ket-qua/luot-2.md`](eval/ket-qua/luot-2.md)) ·
-README nhóm · khung `validation/` + `reflection/` · `demo-slides.pdf`.
+Đã có: 3 lớp code chạy end-to-end · **115 pytest** · golden set 22 case · bot `/timlai` + `/gioithieu` chạy trong
+server test · README nhóm · khung `validation/` + `reflection/` · `demo-slides.pdf`.
+
+⚠️ **Số đo đang nợ.** Lượt đo thật gần nhất ([`eval/ket-qua/luot-2.md`](eval/ket-qua/luot-2.md): 81.8% pass,
+0 case bịa nguồn) chạy **trước** các thay đổi ngày 31/07 (bỏ tiêu đề · giới thiệu bot · quy đổi thời gian ·
+hỏi rõ loại tài liệu · VLearn), mà 5 case đã đổi mong đợi/input theo hành vi mới. Con số cũ **không so sánh
+trực tiếp được nữa** — phải chạy lại trọn bộ để có số mới. Không sửa số cũ, không suy đoán số mới.
 
 Còn thiếu — cần **người thật** hoặc quyết định của nhóm, Claude không tự điền được:
 
@@ -87,28 +96,32 @@ Còn thiếu — cần **người thật** hoặc quyết định của nhóm, C
 | `reflection/*.md` mới là khung 4 mục | chấm riêng | Mỗi người tự viết — vibe-coding rule kiểm tại CP5 |
 | Backup demo (screenshot/video) | `02-guide.md` §5.2 | Phòng khi live hỏng |
 
-**Chưa đạt bar pass (81.8% < 85%), thiếu đúng 1 case.** Bốn case trượt quy về hai nguyên nhân, đã phân tích
-trong `luot-2.md`; hướng sửa cho từng cái nằm ở slide 6. Nếu định sửa để đo lại: theo nhịp
-`sửa MỘT thứ → chạy lại trọn bộ`, và nhớ **hạn 20 lời gọi/ngày/model** của free tier —
-`chay_eval.py` chạy tiếp được nên hết hạn mức giữa chừng không mất kết quả đã đo.
+**Việc đo tiếp theo:** chạy lại trọn bộ 22 case trên hành vi mới (`python scripts/chay_eval.py`, cache đã tự
+hết hạn nhờ `HANH_VI = 2`). Lượt cũ chưa đạt bar pass (81.8% < 85%, thiếu đúng 1 case) và bốn case trượt đã
+phân tích trong `luot-2.md`; hướng sửa nằm ở slide 6. Nhịp làm: `sửa MỘT thứ → chạy lại trọn bộ`, và nhớ
+**hạn 20 lời gọi/ngày/model** của free tier — `chay_eval.py` chạy tiếp được nên hết hạn mức giữa chừng
+không mất kết quả đã đo.
 
 ## 7. Bản đồ code
 
 Ba lớp, một chiều phụ thuộc: `bot.py → index.py → tra_cuu.py → render.py`.
 
-- [`codebase/timlai/config.py`](codebase/timlai/config.py) — đọc `.env`, hằng số, ép UTF-8 cho console Windows.
+- [`codebase/timlai/config.py`](codebase/timlai/config.py) — đọc `.env`, hằng số (kể cả `LINK_VLEARN`), ép UTF-8 cho console Windows.
 - [`codebase/timlai/index.py`](codebase/timlai/index.py) — ② retrieval: SQLite FTS5 + BM25, `remove_diacritics 2` để khớp "buoi" ↔ "buổi"; `truy_xuat()` xếp tin **mới nhất lên đầu**.
-- [`codebase/timlai/tra_cuu.py`](codebase/timlai/tra_cuu.py) — ③ quyết định AI. `SYSTEM` + `neo()` + `canh_bao_cu()`.
-- [`codebase/timlai/render.py`](codebase/timlai/render.py) — 4 đường đi trải nghiệm, mỗi đường một màu embed.
-- [`codebase/timlai/bot.py`](codebase/timlai/bot.py) — ① Discord client. Ba đường vào (`/timlai`, @mention, reply vào tin bot) đều gọi chung `hoi()`. Trả lời **công khai**. `KENH_TU_DONG` bật chế độ mọi-tin-là-câu-hỏi cho một kênh (mặc định tắt).
+- [`codebase/timlai/tra_cuu.py`](codebase/timlai/tra_cuu.py) — ③ quyết định AI. `SYSTEM` + `neo()` + `canh_bao_cu()`. Kèm ba luật **code tự quyết, không hỏi LLM**: `la_hoi_ve_bot()` (bot tự giới thiệu), `moc_thoi_gian()`/`loc_theo_ngay()` (quy đổi "hôm qua" ra ngày rồi lọc ứng viên), `lam_ro_loai()` (buổi N có ≥2 loại tài liệu thì ép hỏi lại).
+- [`codebase/timlai/render.py`](codebase/timlai/render.py) — 5 đường đi trải nghiệm, mỗi đường một màu embed. **Không dùng tiêu đề embed** — màu là tín hiệu duy nhất phân biệt, nên đừng để hai đường trùng màu.
+- [`codebase/timlai/bot.py`](codebase/timlai/bot.py) — ① Discord client. Bốn đường vào (`/timlai`, `/gioithieu`, @mention, reply vào tin bot) đều gọi chung `hoi()`. Trả lời **công khai**. `KENH_TU_DONG` bật chế độ mọi-tin-là-câu-hỏi cho một kênh (mặc định tắt).
 - `codebase/scripts/` — entry point chạy tay, **không chứa logic**. Logic cần test thì phải nằm trong `timlai/`.
 
-**Ba quy tắc kiến trúc, đừng phá:**
+**Bốn quy tắc kiến trúc, đừng phá:**
 
 1. `tra_cuu.py` **không import discord**. Đây là điều kiện để `chay_eval.py` chạy 22 case ngoài Discord (R4, 15 điểm).
 2. **Chống bịa bằng code, không bằng prompt.** `neo()` bỏ mọi `message_id` không có trong danh sách ứng viên;
    khai `tim_thay=True` mà không neo được thì hạ xuống `False`. Số id bị bỏ là **số đo hallucination** — hiện lên footer, không nuốt im.
-3. **Ngày tháng do code tính**, không hỏi LLM (`canh_bao_cu`).
+3. **Ngày tháng do code tính**, không hỏi LLM (`canh_bao_cu`, `moc_thoi_gian`, `loc_theo_ngay`).
+4. **Ba trường `gioi_thieu` · `moc_ngay` · `goi_y_vlearn` thuộc quyền code.** Chúng nằm trong `response_schema`
+   nên model nhìn thấy và có thể tự khai — `neo()` xoá sạch cả ba, `tra_cuu()` đặt lại **sau** `neo()`.
+   Thêm trường loại này thì phải thêm một dòng xoá trong `neo()` và một test canh.
 
 ## 8. Lệnh hay dùng
 

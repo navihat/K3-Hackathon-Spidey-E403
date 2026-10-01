@@ -44,6 +44,8 @@ def main() -> None:
     print(f"  ngoai_pham_vi = {kq.ngoai_pham_vi}")
     print(f"  do_tin_cay    = {kq.do_tin_cay}")
     print(f"  bỏ (bịa)      = {len(bo_di)} {bo_di}")
+    # Ba cờ do CODE đặt — in ra để phân biệt "model trả lời thế" với "code ép thế".
+    print(f"  [code] giới thiệu={kq.gioi_thieu} · vlearn={kq.goi_y_vlearn} · mốc={kq.moc_ngay}")
     print(f"\n── Người dùng thấy " + "─" * 42)
     print(render.thanh_text(kq, nguon))
 

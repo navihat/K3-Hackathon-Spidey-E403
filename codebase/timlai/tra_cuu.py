@@ -344,9 +344,10 @@ LOAI_TAI_LIEU: dict[str, tuple[str, ...]] = {
 _HOI_TAI_LIEU = re.compile(r"\b(slide|slie|tai lieu|tailieu|bai giang|deck)\b")
 
 # "slide của anh Tuấn", "slide của Tuấn" — đã có cái neo khác để thu hẹp, hỏi thêm
-# "loại nào?" chỉ làm phiền. Cần honorific hoặc tên viết hoa để khỏi bắt nhầm
-# "của buổi 5".
-_CO_NGUOI_GUI = re.compile(r"\bcủa\s+(anh|chị|thầy|cô|bạn|em|[A-ZÀ-Ỹ])", re.IGNORECASE | re.UNICODE)
+# "loại nào?" chỉ làm phiền. Cần honorific hoặc tên VIẾT HOA, và vì thế KHÔNG được
+# bật IGNORECASE: bật lên thì `[A-ZÀ-Ỹ]` khớp cả chữ thường và "của buổi 5" cũng bị
+# coi là tên người.
+_CO_NGUOI_GUI = re.compile(r"\b[Cc]ủa\s+(anh|chị|thầy|cô|bạn|em|[A-ZÀ-Ỹ])")
 
 
 def _khop_loai(van_ban: str) -> str | None:

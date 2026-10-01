@@ -167,6 +167,16 @@ def test_da_ro_thi_khong_hoi_lai(cau):
     assert tra_cuu.can_hoi_ro_loai(cau, BUOI_5) == []
 
 
+def test_cua_khong_phai_luc_nao_cung_la_ten_nguoi():
+    """"của buổi 5" KHÔNG phải tên người gửi — vẫn phải hỏi lại loại tài liệu.
+
+    Bẫy đã dính một lần: regex bắt tên người bật `re.IGNORECASE` nên `[A-ZÀ-Ỹ]` khớp
+    cả chữ thường, và mọi câu có chữ "của" đều được coi là đã có neo tên người.
+    """
+    assert tra_cuu.can_hoi_ro_loai("slide của buổi 5", BUOI_5)
+    assert tra_cuu.can_hoi_ro_loai("slide của anh Tuấn", BUOI_5) == []
+
+
 def test_chi_mot_loai_thi_khong_hoi_lai():
     # Hỏi "loại nào?" khi chỉ có đúng một loại là hỏi thừa.
     assert tra_cuu.can_hoi_ro_loai("slide buổi 5", BUOI_5[:1]) == []

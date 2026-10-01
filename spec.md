@@ -108,8 +108,15 @@ Loại: [ ] Tối ưu tính năng có sẵn  [X] Tính năng mới
 
 ## §6. Bốn đường đi của trải nghiệm
 
-- **Happy path**: User: "link slide buổi 5" → Bot: "Link slide buổi 5 do LabCoach [Tên] gửi trong kênh 📘lý-thuyết-k3: [link]. [Link gốc]"
-- **Low-confidence (②)**: User: "slide buổi 5" → Bot tìm thấy 2 link → "Mình thấy 2 link liên quan: [link 1] trong 📘lý-thuyết-k3 · [link 2] trong 🛠tài-nguyên. Bạn xem cái nào đúng? [Link gốc 1] [Link gốc 2]"
+> **31/07 — bỏ câu tiêu đề của embed.** Trước đó mỗi đường có một tiêu đề in đậm ("Không tìm thấy",
+> "Tìm thấy rồi"…) nằm ngay trên phần mô tả vốn đã nói y hệt như vậy. Học viên đọc cùng một câu hai
+> lần, và câu "Không tìm thấy" là thứ đập vào mắt trước cả câu trả lời thật. Giờ mỗi đường chỉ còn
+> phân biệt bằng **màu viền** (`render._mau`), và đó là lý do hai đường không được dùng chung một màu.
+
+- **Happy path**: User: "link slide lý thuyết buổi 5" → Bot: "Link slide buổi 5 do LabCoach [Tên] gửi trong kênh 📘lý-thuyết-k3: [link]. [Link gốc]" + khối "Slide lý thuyết" chỉ sang VLearn
+- **Low-confidence (②)**: User: "slide buổi 5" → buổi 5 có nhiều loại tài liệu → "Buổi nào cũng có nhiều loại tài liệu. Bạn cần loại nào: lý thuyết · build/tài nguyên?" kèm mỗi loại một tin mới nhất
+- **Hỏi về chính bot**: User: "chào bạn, bạn giúp mình được gì?" hoặc `/gioithieu` hoặc @mention trống → Bot trả phần giới thiệu cố định (làm được gì · **không** làm gì · 3 cách hỏi · 4 câu mẫu), footer ghi đang theo dõi bao nhiêu tin và chạy model nào. Không tốn lời gọi AI
+- **Có mốc thời gian**: User: "slide workshop hôm qua" → code quy đổi "hôm qua" = 30/07/2026, lọc ứng viên đúng ngày đó, và **nói ra ngày mình đã hiểu** (dòng 🗓) để user sửa được nếu bot hiểu sai
 - **Failure/không căn cứ (①)**: User: "link slide buổi 10" → Bot: "Mình không tìm thấy link slide buổi 10 trong các kênh. Bạn thử gõ 'link slide buổi 9' nhé?"
 - **Correction (user sửa)**: User: "link lab 2" → Bot: "Link lab 2 trong 🧪lab-k3: [link]" → User: "ý mình bài 2 của build" → Bot: "Link bài 2 trong 🛠tài-nguyên: [link]"
 - **Khi bị đòi ngoài phạm vi (③)**: User: "giải thích hàm softmax" → Bot: "Mình chỉ tìm link tài liệu từ 5 kênh thôi (thông báo, tài nguyên, thông báo chung, lý thuyết, lab). Bạn hỏi bài trong kênh hỏi-đáp hoặc hỏi AI Tutor trên VLearn nhé."
@@ -131,9 +138,9 @@ Loại: [ ] Tối ưu tính năng có sẵn  [X] Tính năng mới
 
   | Nhóm case | Số lượng | Bắt nguồn từ đâu |
   |---|---|---|
-  | Thường (TH-01…TH-10) | 10 | Bốn loại thông tin học viên khai trong khảo sát: slide/tài liệu (84%), link VLearn/codelabs (52%), lab, thông báo chung |
+  | Thường (TH-02…TH-10) | 9 | Bốn loại thông tin học viên khai trong khảo sát: slide/tài liệu (84%), link VLearn/codelabs (52%), lab, thông báo chung |
   | ① Không căn cứ (TH-11, TH-12) | 2 | Hai thứ **cố tình không** có trong index: slide buổi 10 và QR checkin (7/31 người từng tìm QR checkin — nằm ngoài 5 kênh) |
-  | ② Mơ hồ (TH-13, TH-14) | 2 | 84% "chỉ nhớ mơ hồ" + thói quen gõ không dấu/sai chính tả |
+  | ② Mơ hồ (TH-01, TH-13, TH-14) | 3 | 84% "chỉ nhớ mơ hồ" + thói quen gõ không dấu/sai chính tả. TH-01 chuyển sang nhóm này ngày 31/07: "slide buổi 5" không nói rõ **loại** tài liệu |
   | ③ Ngoài phạm vi (TH-15, TH-16) | 2 | Câu hỏi kiến thức — thứ non-goal 1 nói rõ là không làm |
   | ④ Đặc thù domain (TH-17, TH-18) | 2 | Link lab đã quá hạn · slide có 2 phiên bản ở 2 thời điểm |
   | Hiếm (TH-19…TH-22) | 4 | Lọc theo người gửi · câu dài lịch sự · thời gian tương đối · input cụt |
@@ -143,6 +150,14 @@ Loại: [ ] Tối ưu tính năng có sẵn  [X] Tính năng mới
 
   Bar này **không đổi** kể cả khi đo ra thấp hơn, và không đổi khi đổi model. Kết quả từng lượt
   chạy — đủ mọi case, kể cả case chưa đạt — nằm ở [`eval/ket-qua/`](eval/ket-qua/).
+
+- **Vì sao golden set vẫn đúng 22 case sau ngày 31/07**: ba đường đi thêm hôm đó (giới thiệu bot ·
+  quy đổi thời gian · hỏi rõ loại tài liệu) đều do **code** quyết định nên chạy giống hệt nhau mọi
+  lần. Thêm chúng thành case mới thì tỉ lệ pass tăng mà không đo thêm được gì về chất lượng của AI —
+  đúng nghĩa làm đẹp số liệu. Chúng được kiểm ở tầng pytest (`test_gioi_thieu.py`,
+  `test_thoi_gian_va_loai.py`), còn 22 case ở đây vẫn chỉ đo **quyết định của model**.
+  ⚠️ Mong đợi của TH-01 · TH-14 · TH-20 · TH-21 và input của TH-18 đã đổi theo hành vi mới, nên
+  **con số 81.8% ở `luot-2.md` không còn so sánh trực tiếp được** — phải chạy lại trọn bộ để có số mới.
 
 ## §8. Phân công & kế hoạch
 
@@ -287,3 +302,16 @@ bỏ (bịa) = 0
 với `url`. Model gán nhầm nhãn (dán nhãn K3 lên link K4) thì hệ thống không phát hiện được — và loại sai
 này nguy hiểm hơn không có nhãn, vì user tin nhãn rồi bấm nhầm. Hướng xử nếu cần: bắt buộc ≥1 từ khoá
 phân biệt trong nhãn phải xuất hiện nguyên văn trong nội dung tin gốc.
+
+### 31/07 · Bốn thay đổi từ phản hồi khi dùng thật
+
+| Thời điểm | Đổi gì | Vì sao |
+|---|---|---|
+| 31/07 | **Bỏ câu tiêu đề của embed** ở cả 5 đường đi và ở embed lỗi | Ảnh chụp từ người dùng: tiêu đề in đậm "Không tìm thấy" nằm ngay trên câu "Mình không tìm thấy link này…" — cùng một câu đọc hai lần, và câu phủ định là thứ đập vào mắt trước cả nội dung thật. Phân biệt đường đi chuyển hết sang **màu viền** (`render._mau`), nên hai đường không được trùng màu — có test canh (`test_nam_duong_van_phan_biet_duoc_bang_mau`) |
+| 31/07 | **Đường đi thứ 5 — bot tự giới thiệu**: `tra_cuu.la_hoi_ve_bot()` + hằng số `GIOI_THIEU` + lệnh `/gioithieu` + @mention trống | Người dùng chào bot hoặc hỏi "bạn giúp mình được gì" thì nhận đúng câu "Mình không tìm thấy link này" — bot trông như hỏng. Nhận diện bằng **code** chứ không bằng AI vì ba lẽ: không tốn lời gọi nào của free tier (20/ngày/model), câu trả lời là hằng số nên không có gì để bịa, và test được offline. Đây cũng là chỗ nguyên tắc **G2** (§4b) lần đầu trỏ được vào code thật |
+| 31/07 | **Slide lý thuyết chỉ sang VLearn** — hằng số `config.LINK_VLEARN`, hiện thành khối riêng có nhãn *"link cố định — không phải kết quả tìm trong tin nhắn"* | Slide lý thuyết không được đăng trong Discord, nguồn chính thức là VLearn. Link này **không neo được** vào tin nhắn nào nên phải nhìn khác hẳn các link bóc từ tin gốc, nếu không thì lời hứa "mọi link đều truy được về tin nhắn thật" thành lời hứa suông. Cờ do code bật; model gõ thẳng URL VLearn vào câu trả lời vẫn bị `neo()` gỡ và **đếm vào số đo bịa** |
+| 31/07 | **Hỏi rõ loại tài liệu**: `lam_ro_loai()` ép hỏi lại khi câu hỏi đòi "slide buổi N" mà buổi đó có ≥2 loại (lý thuyết · workshop · lab · build/tài nguyên · hackathon) | Cùng một buổi có nhiều loại tài liệu. Model có xu hướng chọn tin khớp nhất rồi khai `do_tin_cay="cao"` — trả slide lý thuyết cho người đang cần slide workshop. Sai kiểu này im lặng và trông y hệt câu trả lời đúng, nên chặn bằng luật kiểm được ở code chứ không chỉ nhắc trong prompt (luật 3b). Chỉ ép khi model **khai tìm thấy** — lớp ① giữ nguyên |
+| 31/07 | **Thời gian do code quy đổi**: `moc_thoi_gian()` hiểu "hôm nay/hôm qua/hôm kia · N ngày trước · tuần này/trước · tháng này/trước · 24/07", `loc_theo_ngay()` lọc ứng viên, prompt thêm dòng `HÔM NAY LÀ …` | Model không biết hôm nay là ngày mấy — hỏi nó "hôm qua là ngày nào" là mời nó đoán, mà đoán lệch một ngày là trả nhầm slide của buổi khác (rủi ro ④). Cùng lý do với `canh_bao_cu()`. Bot **nói ra ngày mình đã hiểu** (dòng 🗓) để user sửa được; không còn tin nào trong khoảng đó thì trả lời luôn, không tốn lời gọi AI |
+| 31/07 | `SYSTEM`: luật 3b (loại tài liệu) + luật 7 (thời gian) mới; luật chống prompt-injection cũ dời số 7 → **8** | Ba trường `gioi_thieu`, `moc_ngay`, `goi_y_vlearn` nằm trong `response_schema` nên model nhìn thấy và có thể tự khai — `neo()` xoá sạch cả ba, chúng chỉ được đặt bởi code **sau** `neo()` |
+| 31/07 | Golden set: đổi mong đợi TH-01 · TH-14 · TH-20 · TH-21, đổi input TH-18, **vẫn giữ đúng 22 case** | Hành vi đổi thì mong đợi phải đổi theo, nếu không thì bảng kết quả đo một đằng ghi một nẻo. Không thêm case mới cho ba đường đi bằng code: chúng luôn pass nên chỉ làm đẹp tỉ lệ (§7). ⚠️ **81.8% ở `luot-2.md` không so sánh trực tiếp được nữa** — cần chạy lại trọn bộ |
+| 31/07 | `chay_eval.py`: khoá cache thêm input + số hiệu hành vi (`HANH_VI = 2`) | Cache lưu `KetQua` **sau** hậu xử lý. Đổi luật mà giữ cache cũ là đo luật cũ rồi chấm bằng mong đợi mới — sai theo kiểu không ai nhìn ra |

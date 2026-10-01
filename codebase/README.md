@@ -13,11 +13,12 @@ codebase/
 ├── index.db                ← SQLite FTS5, sinh ra khi chạy (gitignore)
 │
 ├── timlai/                 ← ★ PACKAGE — logic sản phẩm
-│   ├── config.py           ← đọc .env, hằng số, ép UTF-8 cho console Windows
+│   ├── config.py           ← đọc .env, hằng số (kể cả LINK_VLEARN), ép UTF-8 console
 │   ├── index.py            ← ② retrieval: FTS5 + BM25
 │   ├── tra_cuu.py          ← ③ quyết định AI + chống bịa   ← KHÔNG import discord
-│   ├── render.py           ← trình bày 4 đường đi trải nghiệm
-│   └── bot.py              ← ① Discord client + /timlai
+│   │                         + 3 luật do CODE quyết: giới thiệu · thời gian · loại tài liệu
+│   ├── render.py           ← trình bày 5 đường đi trải nghiệm (không dùng tiêu đề embed)
+│   └── bot.py              ← ① Discord client + /timlai + /gioithieu
 │
 ├── scripts/                ← ★ ENTRY POINT — chạy tay, không phải logic
 │   ├── kiem_tra_doc.py     ← smoke test: bot đọc được Discord chưa?
@@ -26,10 +27,14 @@ codebase/
 │   ├── thu_hoi.py          ← hỏi 1 câu từ terminal (vòng lặp dev)
 │   └── chay_eval.py        ← chạy 22 case golden set → bảng % cho R4
 │
-└── tests/                  ← ★ TEST TỰ ĐỘNG — pytest, không cần API key
+└── tests/                  ← ★ TEST TỰ ĐỘNG — 115 test, không cần API key, ~0,7s
     ├── conftest.py         ← fixture: index in-memory + 3 tin mẫu
-    ├── test_index.py       ← 7 test lớp ②
-    └── test_tra_cuu.py     ← 11 test lớp ③ (4 lớp chỗ khó + 4 đường đi)
+    ├── test_index.py       ← lớp ② retrieval
+    ├── test_tra_cuu.py     ← lớp ③ (4 lớp chỗ khó + các đường đi)
+    ├── test_guardrail.py   ← G1…G9 — mỗi guardrail một test
+    ├── test_gioi_thieu.py  ← bot tự giới thiệu + embed đã bỏ tiêu đề
+    ├── test_thoi_gian_va_loai.py ← quy đổi "hôm qua" · hỏi rõ loại tài liệu · VLearn
+    └── test_bot.py         ← phần thuần của lớp ①
 ```
 
 **Quy tắc chia thư mục** — chỉ một quy tắc, nhưng nó quyết định 15 điểm R4:
@@ -140,6 +145,7 @@ python -m timlai.bot
 | Slash command | `/timlai link slide buổi 5` | có gợi ý tham số, không sợ gõ nhầm |
 | @mention | `@Spidey link slide buổi 5` | gõ tự nhiên, không cần nhớ tên lệnh |
 | Reply | reply vào tin của bot rồi gõ `ý mình là bài 2 của build` | đường **correction** ở spec §6 — hỏi lại không cần bắt đầu lại |
+| Hỏi về chính bot | `/gioithieu`, `@Spidey` (không kèm chữ nào), hoặc "chào bạn, bạn giúp mình được gì?" | người mới chưa biết hỏi gì. Trả lời bằng hằng số trong `tra_cuu.GIOI_THIEU` — **không tốn lời gọi AI** |
 
 **Câu trả lời là công khai** — cả kênh cùng thấy, không còn `ephemeral`. Một người hỏi thì
 cả lớp đỡ phải hỏi lại. Đánh đổi: bot sai thì cũng sai trước mặt mọi người, nên footer
@@ -177,7 +183,7 @@ Nhờ vậy câu trả lời của chính bot cũng không lọt vào index.
 | **2. thu_hoi** | `python scripts/thu_hoi.py "..."` | ✅ (bỏ nếu `--chi-loc`) | ~5s | Một câu cụ thể ra kết quả thế nào? |
 | **3. chay_eval** | `python scripts/chay_eval.py` | ✅ | ~2,5 phút | % qua quality bar — artifact nộp cho R4 |
 
-Model: `gemini-3.6-flash` (free tier) — lý do chọn và số đo hai lần đo: comment ở `timlai/config.py`.
+Model: `gemini-3.1-flash-lite` (free tier) — lý do chọn và số đo từng lần đo: comment ở `timlai/config.py`.
 Hạn free tier tính theo **lời gọi/phút**, nên
 `_goi_gemini` tự giãn 6,5s giữa hai lời gọi liền nhau (`config.GIAN_CACH_GOI`) — đó là lý do
 trọn bộ 22 case mất ~2,5 phút chứ không phải ~30s. Một câu hỏi lẻ trong Discord **không** bị giãn.
@@ -189,12 +195,16 @@ Mã khác (400 sai request, 403 sai key) ném lên ngay vì chờ không tự kh
 **Chạy tầng 1 sau mỗi lần sửa code.** Nó không tốn token và bắt được hầu hết lỗi hồi quy:
 
 ```powershell
-pytest tests -q                     # 18 passed
+pytest tests -q                     # 115 passed
 pytest tests -q -k lop1             # chỉ nhóm chống bịa
 pytest tests -v                     # xem tên từng test
 ```
 
-### 4.1 · Chín case phải test bằng tay trước khi demo
+> **Sửa luật hậu xử lý trong `tra_cuu.py` (neo · lam_ro_loai · moc_thoi_gian) thì phải tăng
+> `HANH_VI` trong `chay_eval.py`.** Cache lưu `KetQua` *sau* khi hậu xử lý, nên giữ cache cũ
+> là đo luật cũ rồi chấm bằng mong đợi mới — con số ra vẫn đẹp và vẫn sai.
+
+### 4.1 · Mười ba case phải test bằng tay trước khi demo
 
 Đây là các case mà pytest **không** bắt được vì chúng phụ thuộc hành vi LLM thật. Chạy tầng 2 cho từng dòng, ghi kết quả vào `../validation/`.
 
@@ -209,6 +219,10 @@ pytest tests -v                     # xem tên từng test
 | 7 | `thu_hoi.py "link slide buổi 5 bản mới nhất"` | link **v2** (24/07), không phải v1 | ④ thứ tự `truy_xuat` |
 | 8 | `thu_hoi.py "link lab 2"` | có dòng `⚠️ Tin này từ N ngày trước` | ④ `canh_bao_cu` |
 | 9 | `thu_hoi.py "link"` | hỏi lại kèm ví dụ | ② |
+| 10 | `thu_hoi.py "chào bạn, bạn giúp mình được gì?"` | phần giới thiệu, **0 token** (không có dòng `[trace]`) | `la_hoi_ve_bot` bắt nhầm/bỏ sót |
+| 11 | `thu_hoi.py "cho tôi slide buổi 5"` | hỏi lại "loại nào: lý thuyết · build/tài nguyên?" + khối VLearn | `lam_ro_loai` |
+| 12 | `thu_hoi.py "slide lý thuyết buổi 5"` | trả link **và** khối "Slide lý thuyết" chỉ sang VLearn | `hoi_ly_thuyet` |
+| 13 | `thu_hoi.py "slide workshop hôm qua"` | dòng `🗓 Mình hiểu "hôm qua" là ngày dd/mm/yyyy (Thứ …)` | `moc_thoi_gian` |
 
 Case **3, 4** là quan trọng nhất: quality bar trong `spec.md §7` là **0 case bịa nguồn**. Một link bịa ở đây là fail cả bar, không phải trừ điểm.
 
@@ -220,7 +234,9 @@ Case **3, 4** là quan trọng nhất: quality bar trong `spec.md §7` là **0 c
 python scripts/chay_eval.py --gia    # LLM giả, 0 token
 ```
 
-LLM giả cố tình trả 1 message_id bịa mỗi lần được gọi. Kết quả đúng phải là **`bịa nguồn: 19`** (không phải 22 — 3 case mà FTS5 trả 0 ứng viên thì `tra_cuu()` chặn trước, không gọi AI, nên không có gì để bịa). Nếu con số này về **0**, cơ chế `neo()` đã hỏng và mọi số liệu sau đó vô nghĩa.
+LLM giả cố tình trả 1 message_id bịa mỗi lần được gọi, nên **`bịa nguồn`** phải bằng đúng số case có ứng viên: 19 trên index chỉ có 20 tin giả (3 case FTS5 trả 0 ứng viên thì `tra_cuu()` chặn trước, không gọi AI, nên không có gì để bịa), 22 trên index đầy hơn. Con số cụ thể tuỳ index đang chứa gì — thứ phải kiểm là nó **khác 0**. Nếu nó về **0**, cơ chế `neo()` đã hỏng và mọi số liệu sau đó vô nghĩa.
+
+Lượt `--gia` cũng ghi ra một file `luot-N.md` có gắn cảnh báo "LLM GIẢ". Xoá nó sau khi kiểm xong, đừng để lẫn vào các lượt đo thật.
 
 Con số pass ở lượt `--gia` (~73%) **không có ý nghĩa gì** — nó chỉ chứng minh runner chạy và biết phát hiện sai lệch.
 
